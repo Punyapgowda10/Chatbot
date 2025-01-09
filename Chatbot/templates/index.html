@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat-Bot</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden; /* Prevent scrolling outside of window */
+        }
+
+        #chat-container {
+            width: 1200px;
+            height: 90%; /* Fixed height to fit within the window */
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chat-header {
+            background-color: #f8dd10;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 22px; /* Font size for header */
+        }
+
+        #chat-box {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto; /* Makes the chat scrollable when content overflows */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 15px; /* Padding for spacing */
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+            font-size: 18px; /* Font size for chat messages */
+            line-height: 1.5; /* Line height for readability */
+        }
+
+        .user {
+            align-self: flex-end;
+            background-color: #c5c9ca;
+        }
+
+        .assistant {
+            align-self: flex-start;
+            background-color: #f4f4ee;
+        }
+
+        #input-container {
+            display: flex;
+            border-top: 1px solid #ddd;
+        }
+
+        #message-input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            outline: none;
+            font-size: 18px; /* Font size for input */
+            line-height: 1.5; /* Line height for input readability */
+        }
+
+        #send-button {
+            padding: 0 20px;
+            background-color: #f8dd10;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px; /* Font size for button */
+        }
+
+        #send-button:hover {
+            background-color: #023705;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-header">Chat-Bot</div>
+        <div id="chat-box"></div>
+        <div id="input-container">
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $("#send-button").on("click", function () {
+                const userMessage = $("#message-input").val();
+                if (!userMessage) return;
+
+                // Add user message to chat
+                $("#chat-box").append(
+                    `<div class="message user">${userMessage}</div>`
+                );
+                $("#message-input").val("");
+
+                // Send user message to backend
+                $.ajax({
+                    url: "/get_response",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ message: userMessage }),
+                    success: function (data) {
+                        // Add assistant response to chat
+                        $("#chat-box").append(
+                            `<div class="message assistant">${data.response.replace(/\n/g, '<br><br>')}</div>`
+                        );
+
+                        // Scroll to the bottom of the chat box
+                        $("#chat-box").scrollTop($("#chat-box")[0].scrollHeight);
+                    },
+                    error: function () {
+                        $("#chat-box").append(
+                            `<div class="message assistant">Error: Could not get a response.</div>`
+                        );
+                    }
+                });
+            });
+
+            // Allow "Enter" to send a message
+            $("#message-input").on("keypress", function (e) {
+                if (e.key === "Enter") {
+                    $("#send-button").click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
